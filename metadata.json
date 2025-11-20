@@ -1,8 +1,0 @@
-{
-  "name": "Copy of KidTutor — 少儿一对一 AI 日常私教",
-  "description": "一个为6-15岁儿童设计的互动式AI私教应用。它提供一个对话式聊天界面，学生可以就任何学科提问，并获得鼓励性的、分步的解答。用户还可以上传作业图片，让AI进行分析和讲解。",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
-}
