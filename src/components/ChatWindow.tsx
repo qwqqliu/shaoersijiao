@@ -36,7 +36,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onBack }) => {
   const [messages, setMessages] = useState<MessageType[]>([
     {
       id: crypto.randomUUID(),
-      text: "你好！👋 我是你的 AI 私教 KidTutor。今天想学习些什么呢？你可以问我任何问题，或者给我看看你的作业图片哦！",
+      text: "你好！👋 我是你的 AI 私教 Kid。今天想学习些什么呢？你可以问我任何问题，或者给我看看你的作业哦！",
       sender: 'ai',
     },
   ]);
