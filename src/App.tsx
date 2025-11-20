@@ -75,7 +75,7 @@ const App: React.FC = () => {
       </div>
 
       <footer className="text-center p-4 text-gray-500 text-sm mt-6">
-        <p>&copy; {new Date().getFullYear()} KidTutor. 版权所有。仅用于教育目的。</p>
+        <p>&copy; {new Date().getFullYear()} KidTutor. 小桃子版权所有。仅用于教育目的。</p>
       </footer>
     </div>
   );
