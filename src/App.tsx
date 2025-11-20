@@ -55,7 +55,7 @@ const App: React.FC = () => {
           <div className="flex items-center cursor-pointer" onClick={() => setCurrentView('menu')}>
             <BotIcon className="w-8 h-8 text-blue-500 mr-3" />
             <h1 className="text-2xl font-bold text-gray-800">
-              KidTutor AI 智能私教
+              小桃子专用私教
             </h1>
           </div>
            <div className="text-lg font-semibold text-gray-600">
