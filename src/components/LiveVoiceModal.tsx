@@ -1,8 +1,8 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { XIcon } from './icons/XIcon';
 import { BotIcon } from './icons/BotIcon';
+// 确保 utils 路径是对的
 import { convertFloat32ToInt16, arrayBufferToBase64, decodeAudioData, base64ToUint8Array } from '../utils/audioUtils';
 import { AI_SYSTEM_PROMPT } from '../constants';
 
@@ -13,7 +13,7 @@ interface LiveVoiceModalProps {
 const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
   const [status, setStatus] = useState<'connecting' | 'active' | 'error' | 'closed'>('connecting');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [volumeLevel, setVolumeLevel] = useState<number>(0); // For visualization
+  const [volumeLevel, setVolumeLevel] = useState<number>(0); 
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const inputSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -27,13 +27,15 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
 
     const startSession = async () => {
       try {
-        if (!process.env.API_KEY) throw new Error("API Key missing");
+        // 【大哥修正点】：这里改成 Vite 的读取方式！
+        const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+        if (!API_KEY) throw new Error("未找到 API Key，请检查 .env 文件");
         
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: API_KEY });
 
         // 1. Setup Audio Contexts
         const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
-        const audioContext = new AudioContextClass({ sampleRate: 24000 }); // Output sample rate
+        const audioContext = new AudioContextClass({ sampleRate: 24000 }); 
         audioContextRef.current = audioContext;
         
         // 2. Get Microphone Stream
@@ -53,13 +55,6 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
                     setStatus('active');
                     console.log("Live session connected");
 
-                    // 4. Setup Input Streaming (Mic -> Model)
-                    // Note: Browser AudioContext sample rate might vary, but we need to send data properly.
-                    // Using a separate context for input to match mic better or just handle resampling.
-                    // For simplicity, we reuse the context but be mindful of sample rates.
-                    // Actually, best practice is creating a specific input context or handling resampling if needed.
-                    // Here we will trust the context creation.
-                    
                     const inputContext = new AudioContextClass({ sampleRate: 16000 });
                     const source = inputContext.createMediaStreamSource(stream);
                     const processor = inputContext.createScriptProcessor(4096, 1, 1);
@@ -67,12 +62,13 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
                     processor.onaudioprocess = (e) => {
                         const inputData = e.inputBuffer.getChannelData(0);
                         
-                        // Calculate volume for visualization
+                        // 计算音量动画
                         let sum = 0;
                         for(let i=0; i<inputData.length; i++) sum += inputData[i] * inputData[i];
                         const rms = Math.sqrt(sum / inputData.length);
-                        setVolumeLevel(Math.min(rms * 5, 1)); // Scale up for visual
+                        setVolumeLevel(Math.min(rms * 5, 1)); 
 
+                        // 音频转换核心逻辑
                         const pcm16 = convertFloat32ToInt16(inputData);
                         const base64Data = arrayBufferToBase64(pcm16.buffer);
                         
@@ -95,7 +91,6 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
                 onmessage: async (message: LiveServerMessage) => {
                     if (!isMounted) return;
                     
-                    // Handle Audio Output
                     const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
                     if (base64Audio) {
                         const audioData = base64ToUint8Array(base64Audio);
@@ -105,7 +100,6 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
                         source.buffer = audioBuffer;
                         source.connect(audioContext.destination);
                         
-                        // Schedule gapless playback
                         const currentTime = audioContext.currentTime;
                         if (nextStartTimeRef.current < currentTime) {
                             nextStartTimeRef.current = currentTime;
@@ -155,7 +149,6 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
 
     return () => {
       isMounted = false;
-      // Cleanup
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -169,10 +162,6 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
-      // We can't explicitly close the session object easily from the promise wrapper in this specific SDK setup 
-      // without storing the resolved session, but closing the underlying transport usually happens on unmount naturally or timeouts.
-      // If the SDK exposes a clean close on the session object, we would call it here.
-      // For now, stopping media streams is critical.
     };
   }, []);
 
@@ -189,7 +178,6 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
         <div className="mb-8 text-center">
             <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(59,130,246,0.5)] relative">
                 <BotIcon className="w-12 h-12 text-white z-10" />
-                {/* Pulsing Effect based on volume/status */}
                 {status === 'active' && (
                     <>
                         <div className="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-20"></div>
@@ -200,7 +188,7 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
                     </>
                 )}
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">KidTutor 语音模式</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">小桃语音模式</h2>
             <p className="text-blue-200">
                 {status === 'connecting' && "正在连接..."}
                 {status === 'active' && "正在聆听..."}
