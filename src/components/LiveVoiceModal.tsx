@@ -28,7 +28,7 @@ const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ onClose }) => {
     const startSession = async () => {
       try {
         // 【大哥修正点】：这里改成 Vite 的读取方式！
-        const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+        const API_KEY = import.meta.env.VITE_API_KEY;
         if (!API_KEY) throw new Error("未找到 API Key，请检查 .env 文件");
         
         const ai = new GoogleGenAI({ apiKey: API_KEY });
