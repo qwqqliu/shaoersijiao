@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Chat } from '@google/genai';
 import { createChatSession } from '../services/geminiService';
@@ -57,6 +56,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onBack }) => {
     scrollToBottom();
   }, [messages]);
 
+  // --- 大哥新增功能：专门处理语音模式传回来的文字 ---
+  const handleVoiceMessage = useCallback((text: string) => {
+    const aiMessage: MessageType = {
+      id: crypto.randomUUID(),
+      text: text, // 这里是 AI 说的内容
+      sender: 'ai', // 标记为 AI 发送的
+    };
+    // 直接加到聊天记录里，不需要再调用 API，因为 LiveModal 已经聊完了
+    setMessages((prev) => [...prev, aiMessage]);
+  }, []);
+  // ---------------------------------------------
+
   const handleSendMessage = useCallback(async (text: string, image?: File) => {
     if ((!text.trim() && !image) || isLoading) return;
     
@@ -96,7 +107,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onBack }) => {
 
       if (image) {
           try {
-              // Extract JSON from the response, even if it's wrapped in markdown
               const jsonMatch = responseText.match(/\{[\s\S]*\}/);
               const cleanedJsonString = jsonMatch ? jsonMatch[0] : responseText;
               const parsedJson = JSON.parse(cleanedJsonString);
@@ -163,7 +173,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onBack }) => {
         isLoading={isLoading} 
         onStartVoice={toggleVoiceMode}
       />
-      {isVoiceMode && <LiveVoiceModal onClose={() => setIsVoiceMode(false)} />}
+      {/* --- 大哥修改重点：把接收函数传进去 --- */}
+      {isVoiceMode && (
+        <LiveVoiceModal 
+          onClose={() => setIsVoiceMode(false)} 
+          onMessageReceived={handleVoiceMessage} 
+        />
+      )}
     </div>
   );
 };
